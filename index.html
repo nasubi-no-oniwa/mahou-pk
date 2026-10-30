@@ -1011,7 +1011,8 @@ function pickAt(e) {
 }
 function edButtons() { $('#edTest').disabled = !ED.P; $('#edReg').disabled = !ED.P; $('#edClear').disabled = !ED.P && !ED.pts.length; }
 function setInk(L) { const k = clamp(1 - L / CAP, 0, 1); $('#inkFill').style.width = (k * 100).toFixed(1) + '%'; $('#ink').classList.toggle('out', k <= .005); $('#ink').classList.toggle('low', k < .2); }
-function clearDraw() { dctx.clearRect(0, 0, VW, VH); }
+const DRAW_EL = $('#draw');
+function clearDraw() { dctx.save(); dctx.setTransform(1, 0, 0, 1, 0, 0); dctx.clearRect(0, 0, DRAW_EL.width, DRAW_EL.height); dctx.restore(); }
 function startPoint() { return toScreen(R0); }
 function strokePath(pts, col, w, glow) {
   if (pts.length < 2) return;
@@ -1643,6 +1644,8 @@ function stepAll(dt, draw = true) {
 
   if (mode === 'bat') updateSwing(dt);
   updatePad();
+  // 線を描く画面のほかでは、線の層そのものを見せない（消し残しが出ないように）
+  { const on = mode === 'edit'; if (DRAW_EL.style.visibility !== (on ? 'visible' : 'hidden')) DRAW_EL.style.visibility = on ? 'visible' : 'hidden'; }
   if (mode === 'edit') { redrawStroke(); drawDirty = true; } else if (drawDirty) { clearDraw(); drawDirty = false; }
   if (ball.visible && camMode === 'bat') { // キーパーから：遠くでは大きく光らせる
     const dc = camera.position.distanceTo(ball.position);
