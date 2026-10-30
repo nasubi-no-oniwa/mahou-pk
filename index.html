@@ -99,7 +99,13 @@ button.chip{cursor:pointer}
 .big small{display:block;font-family:var(--body);font-weight:900;font-size:12px;opacity:.9;margin-top:2px;letter-spacing:0}
 .big.gold{background:var(--gold);color:var(--ink);box-shadow:0 4px 0 #a07d0e}
 .big.alt{background:transparent;color:var(--cream);border:2px solid rgba(246,240,220,.6);box-shadow:none;font-size:16px;padding:9px}
-.big.other{display:block;text-decoration:none;box-sizing:border-box;font-size:15px;border-style:dashed}
+html[lang=en] .card h1{font-size:clamp(30px,10.5vw,46px);white-space:nowrap}
+.series{display:flex;gap:6px;margin:-8px 0 14px;padding:4px;background:rgba(0,0,0,.25);border-radius:999px}
+.series a,.series span{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 6px;border-radius:999px;font:900 15px var(--body);color:var(--cream);text-decoration:none;white-space:nowrap}
+.series a{border:1.5px solid rgba(246,240,220,.35)}
+.series a:active{transform:scale(.97)}
+.series span.on{background:var(--gold);color:var(--ink)}
+.series i{font-style:normal;font-size:18px}
 .big.x{background:#000;color:#fff;box-shadow:0 4px 0 #444;font-size:17px}
 .big:disabled{opacity:.5;cursor:default}
 .row2{display:flex;gap:8px}.row2 .big{flex:1}
@@ -196,6 +202,7 @@ button.chip{cursor:pointer}
   <!-- タイトル -->
   <div class="overlay" id="title">
     <div class="card">
+      <nav class="series" aria-label="魔法の球"><a href="https://nasubi-no-oniwa.github.io/mahou-no-tama/" data-series="https://nasubi-no-oniwa.github.io/mahou-no-tama/"><i>⚾</i><b data-i="s_base">野球</b></a><span class="on" aria-current="page"><i>⚽</i><b data-i="s_pk">PK</b></span></nav>
       <p class="ruby" data-i="ruby">まほうのたま ピーケー</p>
       <h1 data-ih="titleH">魔法の<span class="tama">球</span><span class="pk">PK</span></h1>
       <p class="sub" data-i="sub">線を描けば、それが魔球になる。</p>
@@ -207,7 +214,6 @@ button.chip{cursor:pointer}
       <button class="big gold" id="goCode"><span data-i="byCode">合言葉で止める</span><small data-i="byCodeSub">キーパー</small></button>
       <button class="big alt" id="goRandom" data-i="random">だれかの魔球を止める</button>
       <button class="big alt" id="goRank" data-i="rank">ランキング</button>
-      <a class="big alt other" href="https://nasubi-no-oniwa.github.io/mahou-no-tama/" data-i="other">⚾ 野球版「魔法の球」</a>
       <div class="news" id="myNews" hidden></div>
       <p class="note" id="titleNote"></p>
       <div class="langs" role="group" aria-label="Language"><button data-lang="ja">日本語</button><button data-lang="en">English</button><button data-lang="zh">繁中</button><button data-lang="ko">한국어</button></div>
@@ -334,7 +340,8 @@ const TX = {
     shareP: '魔球「{n}」をけった。\n止められるものなら止めてみろ。\n合言葉：{c}',
     shareW: '魔球「{n}」を止めた！\n合言葉：{c}',
     shareL: '魔球「{n}」に決められた…\n合言葉：{c}',
-    other: '⚾ 野球版「魔法の球」',
+    s_base: '野球',
+    s_pk: 'PK',
     tags: '#魔法の球',
     rankTitle: '止められていない魔球', tabRank: 'ランキング', tabMine: '自分の魔球', rEmpty: 'まだありません', mineEmpty: 'まだ魔球をけっていません',
     del: '消す', delQ: 'この魔球を消しますか？（もとにもどせません）', delFail: '消せませんでした', noBalls: 'まだ魔球がありません。最初の1本をけろう',
@@ -368,7 +375,8 @@ const TX = {
     shareP: 'I took a magic shot: "{n}".\nSave it if you can.\nCode: {c}',
     shareW: 'I saved the magic shot "{n}"!\nCode: {c}',
     shareL: 'The magic shot "{n}" beat me…\nCode: {c}',
-    other: '⚾ Baseball version: Magic Pitch',
+    s_base: 'Baseball',
+    s_pk: 'PK',
     tags: '#魔法の球',
     rankTitle: 'Unstoppable shots', tabRank: 'Rankings', tabMine: 'My shots', rEmpty: 'Nothing yet', mineEmpty: "You haven't taken a shot yet",
     del: 'Delete', delQ: "Delete this shot? This can't be undone", delFail: "Couldn't delete", noBalls: 'No shots yet. Take the first one',
@@ -402,7 +410,8 @@ const TX = {
     shareP: '我踢了魔球「{n}」。\n有本事就擋擋看。\n暗號：{c}',
     shareW: '我擋下了魔球「{n}」！\n暗號：{c}',
     shareL: '被魔球「{n}」進球了…\n暗號：{c}',
-    other: '⚾ 棒球版「魔法之球」',
+    s_base: '棒球',
+    s_pk: 'PK',
     tags: '#魔法の球',
     rankTitle: '沒被擋下的魔球', tabRank: '排行榜', tabMine: '我的魔球', rEmpty: '還沒有', mineEmpty: '你還沒踢過魔球',
     del: '刪除', delQ: '要刪除這顆魔球嗎？（無法復原）', delFail: '無法刪除', noBalls: '還沒有魔球。來踢第一球吧',
@@ -436,7 +445,8 @@ const TX = {
     shareP: '마구 「{n}」을 찼다.\n막을 수 있으면 막아 봐.\n암호: {c}',
     shareW: '마구 「{n}」을 막았다!\n암호: {c}',
     shareL: '마구 「{n}」에 골을 먹었다…\n암호: {c}',
-    other: '⚾ 야구판 「마법의 공」',
+    s_base: '야구',
+    s_pk: 'PK',
     tags: '#魔法の球',
     rankTitle: '막히지 않은 마구', tabRank: '랭킹', tabMine: '내 마구', rEmpty: '아직 없어요', mineEmpty: '아직 마구를 차지 않았어요',
     del: '지우기', delQ: '이 마구를 지울까요? (되돌릴 수 없어요)', delFail: '지우지 못했어요', noBalls: '아직 마구가 없어요. 첫 번째 공을 차자',
@@ -458,6 +468,7 @@ function applyLang() {
   document.querySelectorAll('[data-ip]').forEach(e => { e.placeholder = tr(e.dataset.ip); });
   document.querySelectorAll('.langs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === LANG));
   document.title = tr('title');
+  document.querySelectorAll('.series a').forEach(e => { e.href = e.dataset.series + '?lang=' + LANG; });
 }
 document.querySelectorAll('.langs button').forEach(b => b.onclick = () => { LANG = b.dataset.lang; lsSet('pk_lang', LANG); applyLang(); refreshTitle(); });
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
