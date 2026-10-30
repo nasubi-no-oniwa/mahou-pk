@@ -1612,7 +1612,7 @@ addEventListener('resize', resize);
 /* ===================== まわす ===================== */
 let lastT = performance.now(), tAll = 0;
 const _look = new THREE.Vector3();
-let MANUAL = false;
+let MANUAL = false, drawDirty = false;
 function frame(now) {
   const dt = Math.min(.05, (now - lastT) / 1000); lastT = now;
   if (!MANUAL) stepAll(dt);
@@ -1630,7 +1630,7 @@ function stepAll(dt, draw = true) {
 
   if (mode === 'bat') updateSwing(dt);
   updatePad();
-  if (mode === 'edit') redrawStroke();
+  if (mode === 'edit') { redrawStroke(); drawDirty = true; } else if (drawDirty) { clearDraw(); drawDirty = false; }
   if (ball.visible && camMode === 'bat') { // キーパーから：遠くでは大きく光らせる
     const dc = camera.position.distanceTo(ball.position);
     ballScale = clamp(dc / 7, 1, 2.2); ball.userData.halo.material.opacity = clamp((dc - 6) / 10, 0, 1) * .22;
