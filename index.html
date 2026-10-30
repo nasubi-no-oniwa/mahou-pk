@@ -614,16 +614,16 @@ const zone = new THREE.Group(); scene.add(zone);
   for (const s of [-1, 1]) { const p = mesh(new THREE.CylinderGeometry(R, R, GH + R, 16), postM, s * (GW + R), (GH + R) / 2, ZP); scene.add(p); }
   const bar = mesh(new THREE.CylinderGeometry(R, R, GW * 2 + R * 4, 16), postM, 0, GH + R, ZP); bar.rotation.z = Math.PI / 2; scene.add(bar);
   // 網
-  const netTex = canvasTex(64, 64, (g, w, h) => { g.clearRect(0, 0, w, h); g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 3; g.strokeRect(0, 0, w, h); }, [1, 1]);
+  const netTex = canvasTex(64, 64, (g, w, h) => { g.clearRect(0, 0, w, h); g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = 5; g.strokeRect(0, 0, w, h); }, [1, 1]);
   netTex.wrapS = netTex.wrapT = THREE.RepeatWrapping;
   const netM = (rx, ry) => { const t = netTex.clone(); t.needsUpdate = true; t.repeat.set(rx, ry); return new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: .55, depthWrite: false, side: THREE.DoubleSide }); };
   const D = 2.0, G = new THREE.Group(); scene.add(G); goalNet = G;
-  const back = new THREE.Mesh(new THREE.PlaneGeometry(GW * 2, GH * .8, 36, 12), netM(GW * 2 / .12, GH * .8 / .12)); back.position.set(0, GH * .4, ZP - D); G.add(back);
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(GW * 2, GH * .8, 36, 12), netM(GW * 2 / .2, GH * .8 / .2)); back.position.set(0, GH * .4, ZP - D); G.add(back);
   NET_BACK = { m: back, base: Float32Array.from(back.geometry.attributes.position.array), hit: null };
-  const top = new THREE.Mesh(new THREE.PlaneGeometry(GW * 2, Math.hypot(D, GH * .2)), netM(GW * 2 / .12, D / .12)); top.position.set(0, GH * .9, ZP - D / 2); top.rotation.x = Math.PI / 2 - Math.atan2(GH * .2, D); G.add(top);
+  const top = new THREE.Mesh(new THREE.PlaneGeometry(GW * 2, Math.hypot(D, GH * .2)), netM(GW * 2 / .2, D / .2)); top.position.set(0, GH * .9, ZP - D / 2); top.rotation.x = Math.PI / 2 - Math.atan2(GH * .2, D); G.add(top);
   for (const s of [-1, 1]) {
     const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(D, 0); sh.lineTo(D, GH * .8); sh.lineTo(0, GH); sh.lineTo(0, 0);
-    const sg = new THREE.ShapeGeometry(sh); const uv = sg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * D / .12, uv.getY(i) * GH / .12);
+    const sg = new THREE.ShapeGeometry(sh); const uv = sg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * D / .2, uv.getY(i) * GH / .2);
     const side = new THREE.Mesh(sg, netM(1, 1)); side.rotation.y = Math.PI / 2; side.position.set(s * GW, 0, ZP); G.add(side);
   }
   // 入る範囲（作るときに光らせる）
@@ -829,7 +829,7 @@ function setCam(mode) {
   camMode = mode; const asp = VW / VH;
   if (mode === 'top' || mode === 'side') {
     camera = ortho;
-    const TOPPAD = 150, BOTPAD = 120, SIDEPAD = 18, zA = ZP - 2.4, zB = R0.z + 2.6, span = zB - zA;
+    const TOPPAD = 150, BOTPAD = 150, SIDEPAD = 18, zA = ZP - 2.4, zB = R0.z + 2.6, span = zB - zA;
     let wpp, tx, ty, target;
     if (mode === 'top') { // 真上から。ボールが下、ゴールが上
       wpp = Math.max(span / Math.max(120, VH - TOPPAD - BOTPAD), 9 / Math.max(120, VW - SIDEPAD * 2));
@@ -850,17 +850,30 @@ function setCam(mode) {
   } else {
     camera = persp; const c = CAMS[mode];
     persp.aspect = asp; persp.position.copy(c.pos); persp.up.set(0, 1, 0); persp.lookAt(c.look); persp.fov = camFov(mode); persp.clearViewOffset(); persp.updateProjectionMatrix(); persp.updateMatrixWorld(true);
-    if (mode === 'bat') { // ゴールの下の線が画面の下のほう（案内の少し上）に来るように、絵ごと下へずらす
-      const p = V3(0, 0, ZP).project(persp), sy = (1 - p.y) / 2 * VH, want = VH - Math.max(110, VH * .2);
-      if (sy < want) { persp.setViewOffset(VW, VH, 0, sy - want, VW, VH); persp.updateProjectionMatrix(); }
-    }
+    // 大事な物が、上の案内と下のボタンにかくれない所に入るように、画角とずれを決める
+    if (mode === 'ed') fitSafe([R0.clone().add(V3(-.45, -.25, 0)), R0.clone().add(V3(.45, .45, 0)), V3(-GW - .2, GH + .25, ZP), V3(GW + .2, GH + .25, ZP), V3(-GW - .2, 0, ZP), V3(GW + .2, 0, ZP)], 152, 150, 'center');
+    if (mode === 'goal') fitSafe([V3(-GW - .3, GH + .3, ZP), V3(GW + .3, GH + .3, ZP), V3(-GW - .3, -.05, ZP), V3(GW + .3, -.05, ZP)], 140, 70, 'center');
+    if (mode === 'bat') fitSafe([V3(-GW - .35, GH + .35, KZ), V3(GW + .35, GH + .35, KZ), V3(-GW - .35, 0, KZ), V3(GW + .35, 0, KZ)], 78, 96, 'bottom');
   }
   // キーパーから見るときは、網とキーパーを少しすかす
   M.bodyK.opacity = mode === 'bat' ? .5 : 1; M.glove.opacity = mode === 'bat' ? .75 : 1;
-  if (goalNet) goalNet.visible = mode !== 'bat';
+  if (goalNet) { goalNet.visible = true; goalNet.traverse(o => { if (o.material) o.material.opacity = mode === 'bat' ? .42 : .6; }); }
   zone.visible = mode === 'ed' || mode === 'goal';
   ballScale = mode === 'bat' ? 1.3 : 1;
   zone.userData.fill.material.opacity = .16;
+}
+// pts（3Dの点）が、画面の上 top・下 bot をあけた所に入るように、画角（fov）と上下のずれを決める
+function fitSafe(pts, top, bot, align) {
+  const side = 10, availH = Math.max(80, VH - top - bot), availW = VW - side * 2;
+  for (let it = 0; it < 3; it++) {
+    persp.clearViewOffset(); persp.updateProjectionMatrix(); persp.updateMatrixWorld(true);
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for (const p of pts) { const q = p.clone().project(persp), x = (q.x + 1) / 2 * VW, y = (1 - q.y) / 2 * VH; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    const kx = 2 * Math.max(Math.abs(x1 - VW / 2), Math.abs(x0 - VW / 2)) / availW, ky = (y1 - y0) / availH, k = Math.max(kx, ky);
+    if (it < 2) { const t = Math.tan(persp.fov * Math.PI / 360) * k; persp.fov = clamp(2 * Math.atan(t) * 180 / Math.PI, 12, 110); continue; }
+    const want = align === 'bottom' ? (VH - bot) - (y1 - y0) / 2 : top + availH / 2, cy = (y0 + y1) / 2;
+    persp.setViewOffset(VW, VH, 0, cy - want, VW, VH); persp.updateProjectionMatrix(); persp.updateMatrixWorld(true);
+  }
 }
 function resize() {
   VW = innerWidth; VH = innerHeight;
@@ -1188,7 +1201,7 @@ function updatePitch(dt) {
   if (S.hitV) { // はじかれた・入ったあと
     S.hitV.y -= 9.8 * dt; ball.position.addScaledVector(S.hitV, dt);
     if (ball.position.y < BR) { ball.position.y = BR; S.hitV.y *= -.4; S.hitV.x *= .75; S.hitV.z *= .75; }
-    if (S.inNet && ball.position.z < ZP - 1.8) { ball.position.z = ZP - 1.8; S.hitV.z *= -.15; S.hitV.x *= .4; }
+    if (S.inNet && ball.position.z < ZP - 2.5) { ball.position.z = ZP - 2.5; S.hitV.z *= -.25; S.hitV.x *= .4; S.hitV.y *= .5; }
     ball.rotation.x += dt * 10; trailPush(ball.position); trailDraw();
     S.after += dt; if (S.after > (S.o.test ? 1.1 : 1.8) && !S.done) { S.done = true; S.o.onEnd && S.o.onEnd(S); }
     return;
@@ -1646,7 +1659,7 @@ function stepAll(dt, draw = true) {
 const SHAKE = { a: 0 }, SLOW = { k: 1, t: 0 };
 function shake(a) { SHAKE.a = Math.max(SHAKE.a, a); }
 function slowMo(t) { SLOW.t = t; }
-function netHit(p, v) { if (NET_BACK) NET_BACK.hit = { x: p.x, y: p.y, t: 0, a: clamp(v / 30, .3, 1.1) }; }
+function netHit(p, v) { if (NET_BACK) NET_BACK.hit = { x: p.x, y: Math.min(p.y, GH * .75), t: -(2 / Math.max(8, v * .55)), a: clamp(v / 28, .5, 1.2) }; }
 let fxT = 0;
 function stepFx(dt) {
   if (AD_TEX) AD_TEX.offset.x = (AD_TEX.offset.x + dt * .06) % 1;
@@ -1654,9 +1667,9 @@ function stepFx(dt) {
   fxT += dt;
   if (FLASH && fxT > .08) { fxT = 0; const c = FLASH.geometry.attributes.color; for (let i = 0; i < c.count; i++) { const on = Math.random() < (SHAKE.a > .02 ? .5 : .12); c.setXYZ(i, on ? 1 : 0, on ? .97 : 0, on ? .9 : 0); } c.needsUpdate = true; }
   const N = NET_BACK; if (N && N.hit) {
-    const h = N.hit; h.t += dt; const pos = N.m.geometry.attributes.position, b = N.base, gx = N.m.position.x, gy = N.m.position.y;
-    const k = Math.exp(-h.t * 3.2) * Math.cos(h.t * 16) * h.a;
-    for (let i = 0; i < pos.count; i++) { const x = b[i * 3] + gx, y = b[i * 3 + 1] + gy, d2 = (x - h.x) ** 2 + (y - h.y) ** 2; pos.setZ(i, b[i * 3 + 2] - .9 * k * Math.exp(-d2 / .9)); }
+    const h = N.hit; h.t += dt; if (h.t < 0) return; const pos = N.m.geometry.attributes.position, b = N.base, gx = N.m.position.x, gy = N.m.position.y;
+    const k = Math.exp(-h.t * 2.4) * Math.cos(h.t * 13) * h.a;
+    for (let i = 0; i < pos.count; i++) { const x = b[i * 3] + gx, y = b[i * 3 + 1] + gy, d2 = (x - h.x) ** 2 + (y - h.y) ** 2; pos.setZ(i, b[i * 3 + 2] - 1.6 * k * Math.exp(-d2 / 1.4)); }
     pos.needsUpdate = true; if (h.t > 2) { N.hit = null; pos.array.set(b); pos.needsUpdate = true; }
   }
 }
