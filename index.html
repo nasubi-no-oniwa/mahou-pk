@@ -51,7 +51,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 /* 上の帯 */
 #top{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 10px) 12px 0;display:flex;align-items:flex-start;gap:8px;pointer-events:none}
 #top>*{pointer-events:auto}
-.chip{background:rgba(15,46,36,.88);color:var(--cream);border-radius:10px;padding:6px 11px;font-weight:900;font-size:13px;border:0;line-height:1.25}
+.chip{white-space:nowrap;background:rgba(15,46,36,.88);color:var(--cream);border-radius:10px;padding:6px 11px;font-weight:900;font-size:13px;border:0;line-height:1.25}
 button.chip{cursor:pointer}
 #batInfo{margin-left:auto;text-align:right;max-width:62%}
 #batInfo .nm{display:block;font-family:var(--disp);font-weight:400;font-size:15px;color:var(--gold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -72,7 +72,7 @@ button.chip{cursor:pointer}
 #msgBig.good{color:var(--gold)}
 #msgBig.magic{color:var(--magic)}
 #msgSub{margin-top:10px;font-weight:900;font-size:15px;color:#fff;text-shadow:0 1px 3px #000,0 0 10px rgba(0,0,0,.7)}
-#hint{word-break:auto-phrase;position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);text-align:center;font-weight:900;font-size:14px;color:#fff;text-shadow:0 1px 3px #000,0 0 10px rgba(0,0,0,.7);pointer-events:none;padding:0 16px;text-wrap:balance}
+#hint{word-break:auto-phrase;position:absolute;left:50%;transform:translateX(-50%);width:max-content;max-width:min(92%,440px);background:rgba(15,46,36,.82);border-radius:12px;padding:6px 12px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);text-align:center;font-weight:900;font-size:14px;color:#fff;text-shadow:0 1px 3px #000,0 0 10px rgba(0,0,0,.7);pointer-events:none;text-wrap:balance}
 #hint.err{color:#ffd0d0}
 #hint.top{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 104px)}
 #views{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 58px);display:flex;gap:4px;background:rgba(15,46,36,.88);padding:4px;border-radius:999px}
@@ -843,7 +843,11 @@ function setCam(mode) {
     ortho.updateMatrixWorld(true);
   } else {
     camera = persp; const c = CAMS[mode];
-    persp.aspect = asp; persp.position.copy(c.pos); persp.up.set(0, 1, 0); persp.lookAt(c.look); persp.fov = camFov(mode); persp.updateProjectionMatrix(); persp.updateMatrixWorld(true);
+    persp.aspect = asp; persp.position.copy(c.pos); persp.up.set(0, 1, 0); persp.lookAt(c.look); persp.fov = camFov(mode); persp.clearViewOffset(); persp.updateProjectionMatrix(); persp.updateMatrixWorld(true);
+    if (mode === 'bat') { // ゴールの下の線が画面の下のほう（案内の少し上）に来るように、絵ごと下へずらす
+      const p = V3(0, 0, ZP).project(persp), sy = (1 - p.y) / 2 * VH, want = VH - Math.max(110, VH * .2);
+      if (sy < want) { persp.setViewOffset(VW, VH, 0, sy - want, VW, VH); persp.updateProjectionMatrix(); }
+    }
   }
   // キーパーから見るときは、網とキーパーを少しすかす
   M.bodyK.opacity = mode === 'bat' ? .5 : 1; M.glove.opacity = mode === 'bat' ? .75 : 1;
