@@ -1232,6 +1232,10 @@ function updatePitch(dt) {
   if (!S.o.test || true) {
     for (let dd = S.dPrev; dd <= d + 1e-6; dd += .08) {
       posAt(S.P, Math.min(dd, d), _bp);
+      if (!S.kz && _bp.z <= KZ) { // キーパーの面を通った所と時間（判定の文と同じ物差し）
+        S.kz = _bp.clone(); S.kzT = WINDUP + Math.min(dd, d) / S.P.v;
+        if (!S.o.test && kpJust(S) === 3) { judge(S, 'hand', _bp); return; } // 「タイミングも場所もいい」なら必ず止める
+      }
       if (_bp.z < KZ + .7) { const hit = keeperHit(_bp); if (hit) { if (!S.o.test) judge(S, hit, _bp); else saveBounce(S, _bp); return; } }
     }
   }
@@ -1333,6 +1337,14 @@ function updateDemo(dt) {
 }
 function batMove() { }
 function batUp() { }
+// 飛びつきの「ちょうど」の幅（文の判定と止める判定で同じものを使う）
+const T_LATE = -.05, T_EARLY = KHANG + .12, P_JUST = .45;
+function kpJust(S) {
+  if (!KP.on || !S.kz) return 0;
+  const late = S.kzT - (KP.t0 + KP.dur), t = late >= T_LATE && late <= T_EARLY;
+  const pz = Math.hypot(S.kz.x - KP.tx, S.kz.y - KP.ty) < P_JUST;
+  return (t ? 1 : 0) + (pz ? 2 : 0);
+}
 function judge(S, hit, p) {
   if (S.judged) return; S.judged = true;
   const end = S.P.W[S.P.W.length - 1];
@@ -1350,10 +1362,10 @@ function judge(S, hit, p) {
     res = 'goal'; SND.ooh();
     if (!KP.on) sub.push(tr('noSwing'));
     else {
-      const reach = KP.t0 + KP.dur, late = arrive - reach; // マイナス = 届く前にボールが来た
-      sub.push(late < -.05 ? tr('tLate') : late > KHANG + .12 ? tr('tEarly') : tr('tJust'));
-      const dx = end.x - KP.tx, dy = end.y - KP.ty;
-      if (Math.hypot(dx, dy) < .45) sub.push(tr('pJust'));
+      const q = S.kz || end, late = (S.kz ? S.kzT : arrive) - (KP.t0 + KP.dur); // マイナス = 届く前にボールが来た
+      sub.push(late < T_LATE ? tr('tLate') : late > T_EARLY ? tr('tEarly') : tr('tJust'));
+      const dx = q.x - KP.tx, dy = q.y - KP.ty;
+      if (Math.hypot(dx, dy) < P_JUST) sub.push(tr('pJust'));
       else if (Math.abs(dy) >= Math.abs(dx)) sub.push(dy > 0 ? tr('pLow') : tr('pHigh'));
       else sub.push(dx > 0 ? tr('pLeft') : tr('pRight')); // キーパーから見て +x は左
     }
